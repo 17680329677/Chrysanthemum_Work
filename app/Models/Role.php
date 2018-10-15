@@ -5,6 +5,7 @@
  * Date: 2018/10/11/011
  * Time: 14:02
  */
+namespace App\Models;
 
 use Zizaco\Entrust\EntrustRole;
 
