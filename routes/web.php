@@ -20,13 +20,17 @@ Auth::routes();
 Route::get('/home', 'HomeController@index')->name('home');
 
 // 用户部分路由
-Route::get('/addrole', 'User\RolesController@createRole');
+Route::get('/addrole', 'User\RolesController@createRole');      // 添加角色
 
-Route::post('/login', 'Auth\LoginController@loginAuthentic');
+Route::post('/login', 'Auth\LoginController@loginAuthentic');       // 用户登录验证
 
-Route::post('/logout', 'Auth\LoginController@logout');
+Route::post('/logout', 'Auth\LoginController@logout');      // 注销用户
 
-Route::post('/adduser', 'User\UserController@createUser');
+Route::post('/adduser', 'User\UserController@createUser');      // 添加新用户
+
+Route::get('/currentuser', 'User\UserController@CurrentUser');      // 获取当前用户
+
+Route::post('currentuserinfo', 'User\UserController@CurrentUserInfo');
 
 // 人工数据路由
 Route::post('/allartificial', 'ArtificialData\ArtificialController@getAll');       // 获取所有人工拍摄的性状数据

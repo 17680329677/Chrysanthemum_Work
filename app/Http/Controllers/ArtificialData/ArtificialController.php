@@ -62,13 +62,15 @@ class ArtificialController extends Controller {
         $input = $request->all();
 
         // 需要检索数值范围的指标
-        $plant_height = $input['plant_height'];     // 植株高度
-        $flower_diameter = $input['flower_diameter'];       // 花径
-        $disc_florets_diameter = $input['disc_florets_diameter'];       // 筒状花部直径
-        $petal_length = $input['petal_length'];     // 花瓣长度
-        $petal_width = $input['petal_width'];       // 花瓣宽度
-        $leaf_length = $input['leaf_length'];       // 叶片长
-        $leaf_width = $input['leaf_width'];         // 叶片宽
+        $numList = array();
+        $numList['plant_height'] = $input['plant_height'];
+        $numList['flower_diameter'] = $input['flower_diameter'];
+        $numList['disc_florets_diameter'] = $input['disc_florets_diameter'];
+        $numList['petal_length'] = $input['petal_length'];
+        $numList['petal_width'] = $input['petal_width'];
+        $numList['leaf_length'] = $input['leaf_length'];
+        $numList['leaf_width'] = $input['leaf_width'];
+
 
         $results = DB::table('artificial_character')
             ->whereIn('ray_florets_flaps', $input['ray_florets_flaps'])
@@ -76,6 +78,16 @@ class ArtificialController extends Controller {
             ->whereIn('classification_of_cultivar', $input['classification_of_cultivar'])
             ->whereIn('color_system', $input['color_system'])
             ->whereIn('age_of_cultivar', $input['age_of_cultivar'])
+            // 使用匿名函数动态添加指标，空指标不做检索
+            ->where(
+                function ($query) use ($numList){
+                    foreach ($numList as $key => $value){
+                        if ($numList[$key] != null){
+                            $query->whereBetween($key, $value);
+                        }
+                    }
+                }
+            )
             ->get()->toArray();
 
         if ($results){
