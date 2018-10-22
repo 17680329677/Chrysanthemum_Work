@@ -41,7 +41,7 @@ class UserController extends Controller{
             ];
         }
         else {
-            $input['password'] = Hash::make(123456);
+            $input['password'] = Hash::make($input['password']);
             //$roleid = $input['roles'];
             $user = User::create($input);
 

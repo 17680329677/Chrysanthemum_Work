@@ -38,3 +38,7 @@ Route::post('/allartificial', 'ArtificialData\ArtificialController@getAll');    
 Route::post('/getcharacterbyname', 'ArtificialData\ArtificialController@getCharacterByName');       // 根据品种名模糊检索人工数据
 
 Route::post('/getcharacterbyindex', 'ArtificialData\ArtificialController@getCharacterByIndex');     // 根据索引项检索数据
+
+Route::post('/picprocess', 'ArtificialData\ArtificialController@picProcess');   // 图片处理的路由 将图片压缩并转换为base64
+
+Route::post('/sendemail', 'Email\EmailController@sendEmail');
