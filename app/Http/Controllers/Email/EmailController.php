@@ -9,6 +9,7 @@
 namespace App\Http\Controllers\Email;
 
 use App\Http\Controllers\Controller;
+use function GuzzleHttp\Psr7\str;
 use Illuminate\Http\Request;
 use App\Helper;
 
@@ -30,9 +31,29 @@ class EmailController extends Controller {
             'quality' => $qualiy
         );
         $url = $this->host . ":4151/pub?topic=sendEmail";
+        # 向python部分请求打包和发送邮件的请求
         Helper::sendMessage(json_encode($post_data), $url);
+        # 读取redis中python处理的结果
+        $key = explode('@', $email);
+        $temp = Helper::read_redis($key[0] . '_email', 200, 1);
+        $res = json_decode($temp);
+        if (isset($res)){
+            if ($res->status == 'success'){
+                return $data = [
+                    'status' => 'success',
+                    'reason' => 'pack and send successfully'
+                ];
+            }else{
+                return $data = [
+                    'status' => 'failed',
+                    'reason' => 'something wrong, please try again!'
+                    ];
+            }
+        }
+
         return $data = [
-            'host' => $url
+            'host' => $url,
+            'res' => $key[0]
         ];
 
     }

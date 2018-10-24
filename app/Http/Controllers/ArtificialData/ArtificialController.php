@@ -121,6 +121,14 @@ class ArtificialController extends Controller {
     public function getCharacterByIndex(Request $request){
         // 获取请求端发送的所有数据
         $input = $request->all();
+        // 文字性指标
+        $indexList = array();
+        $indexList['ray_florets_flaps'] = $input['ray_florets_flaps'];
+        $indexList['flower_type'] = $input['flower_type'];
+        $indexList['classification_of_cultivar'] = $input['classification_of_cultivar'];
+        $indexList['color_system'] = $input['color_system'];
+        $indexList['age_of_cultivar'] = $input['age_of_cultivar'];
+
 
         // 需要检索数值范围的指标
         $numList = array();
@@ -134,11 +142,20 @@ class ArtificialController extends Controller {
 
 
         $results = DB::table('artificial_character')
-            ->whereIn('ray_florets_flaps', $input['ray_florets_flaps'])
-            ->whereIn('flower_type', $input['flower_type'])
-            ->whereIn('classification_of_cultivar', $input['classification_of_cultivar'])
-            ->whereIn('color_system', $input['color_system'])
-            ->whereIn('age_of_cultivar', $input['age_of_cultivar'])
+//            ->whereIn('ray_florets_flaps', $input['ray_florets_flaps'])
+//            ->whereIn('flower_type', $input['flower_type'])
+//            ->whereIn('classification_of_cultivar', $input['classification_of_cultivar'])
+//            ->whereIn('color_system', $input['color_system'])
+//            ->whereIn('age_of_cultivar', $input['age_of_cultivar'])
+            ->where(
+                function ($query) use ($indexList){
+                    foreach ($indexList as $key => $value){
+                        if ($indexList[$key] != null){
+                            $query->whereIn($key, $value);
+                        }
+                    }
+                }
+            )
             // 使用匿名函数动态添加指标，空指标不做检索
             ->where(
                 function ($query) use ($numList){
