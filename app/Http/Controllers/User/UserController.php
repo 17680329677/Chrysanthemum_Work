@@ -49,6 +49,7 @@ class UserController extends Controller{
 //            if($input['roles']) {
 //                $user->attachRole($roleid);
 //            }
+            $user->attachRole(8);
 
             return $data=[
                 'status'=>"success",
@@ -102,6 +103,34 @@ class UserController extends Controller{
                 'reason'=>'user not found!'
             ];
         }
+    }
+
+    public function updateUserInfo(Request $request){
+        $id = $request->get('id');
+        $user = User::where('id', $id)->first();
+        if ($user){
+            $email = $request->get('email');
+            if ($email != $user->email){
+                $user_check = User::where('email', $email)->first();
+                if (!$user_check){
+                    $user->email = $email;
+                }else{
+                    return $data = [
+                        'status' => 'failed',
+                        'reason' => 'email has already present!'
+                    ];
+                }
+            }
+            $user->age = $request->get('age');
+            $user->name = $request->get('name');
+            $user->phone = $request->get('phone');
+            $user->sex = $request->get('sex');
+            $user->save();
+        }
+        return $data = [
+            'status' => 'success',
+            'reason' => 'update success!'
+        ];
     }
 
 }

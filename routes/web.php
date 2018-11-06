@@ -30,7 +30,11 @@ Route::post('/adduser', 'User\UserController@createUser');      // 添加新用�
 
 Route::get('/currentuser', 'User\UserController@CurrentUser');      // 获取当前用户
 
-Route::post('currentuserinfo', 'User\UserController@CurrentUserInfo');
+Route::post('currentuserinfo', 'User\UserController@CurrentUserInfo');  // 获取当前用户信息
+
+Route::post('/resetpassword', 'Auth\ResetPasswordController@resetPassword'); // 修改用户密码
+
+Route::post('/updateUserInfo', 'User\UserController@updateUserInfo');
 
 // 人工数据路由
 Route::post('/allartificial', 'ArtificialData\ArtificialController@getAll');       // 获取所有人工拍摄的性状数据
@@ -42,3 +46,8 @@ Route::post('/getcharacterbyindex', 'ArtificialData\ArtificialController@getChar
 Route::post('/picprocess', 'ArtificialData\ArtificialController@picProcess');   // 图片处理的路由 将图片压缩并转换为base64
 
 Route::post('/sendemail', 'Email\EmailController@sendEmail');
+
+//Route::get('/download', function (){
+//    return response()->download('G:/Chrysanthemum_Work/public/test.txt', '18510363933.txt');
+//});
+Route::get('/download', 'Email\DownLoadController@download');

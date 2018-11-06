@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use function GuzzleHttp\Psr7\str;
 use Illuminate\Http\Request;
 use App\Helper;
+use App\Http\Controllers\Email\DownLoadController;
 
 
 class EmailController extends Controller {
@@ -23,31 +24,45 @@ class EmailController extends Controller {
         $classification = $input['classification'];
         $cultivar_id = $input['id'];
         $qualiy = $input['quality'];
+        $type = $input['type'];
 
         $post_data = array(
             'email' => $email,
             'classification' => $classification,
             'cultivar_id' => $cultivar_id,
-            'quality' => $qualiy
+            'quality' => $qualiy,
+            'type' => $type
         );
         $url = $this->host . ":4151/pub?topic=sendEmail";
         # 向python部分请求打包和发送邮件的请求
         Helper::sendMessage(json_encode($post_data), $url);
         # 读取redis中python处理的结果
         $key = explode('@', $email);
-        $temp = Helper::read_redis($key[0] . '_email', 200, 1);
-        $res = json_decode($temp);
-        if (isset($res)){
+        if ($type == 'mail'){
+            $temp = Helper::read_redis($key[0] . '_email', 200, 1);
+            $res = json_decode($temp);
+            if (isset($res)){
+                if ($res->status == 'success'){
+                    return $data = [
+                        'status' => 'success',
+                        'reason' => 'pack and send successfully'
+                    ];
+                }else{
+                    return $data = [
+                        'status' => 'failed',
+                        'reason' => 'something wrong, please try again!'
+                    ];
+                }
+            }
+        }else if ($type == 'download'){
+            $temp = Helper::read_redis($key[0] . '_dnload', 200, 1);
+            $res = json_decode($temp);
             if ($res->status == 'success'){
                 return $data = [
                     'status' => 'success',
-                    'reason' => 'pack and send successfully'
+                    'reason' => 'files are ready to download!'
                 ];
-            }else{
-                return $data = [
-                    'status' => 'failed',
-                    'reason' => 'something wrong, please try again!'
-                    ];
+//                return redirect()->action('Email\DownLoadController@download');
             }
         }
 

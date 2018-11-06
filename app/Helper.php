@@ -53,4 +53,8 @@ class Helper {
         return $base64_image;
     }
 
+    static function download($from, $to){
+        return response()->download($from, $to);
+    }
+
 }
