@@ -32,7 +32,7 @@ Route::get('/currentuser', 'User\UserController@CurrentUser');      // 获取当
 
 Route::post('currentuserinfo', 'User\UserController@CurrentUserInfo');  // 获取当前用户信息
 
-Route::post('/resetpassword', 'Auth\ResetPasswordController@resetPassword'); // 修改用户密码
+Route::post('/resetpassword', 'User\UserController@resetpwd'); // 修改用户密码
 
 Route::post('/updateUserInfo', 'User\UserController@updateUserInfo');
 

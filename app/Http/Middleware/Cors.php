@@ -17,10 +17,10 @@ class Cors
     {
         $response = $next($request);
         $response->header('Access-Control-Allow-Origin', 'http://127.0.0.1:80');
-        $response->header('Access-Control-Allow-Headers', '*');
+        $response->header('Access-Control-Allow-Headers', 'Origin, Content-Type, Cookie, Accept, multipart/form-data, application/json, Authorization, X-Requested-With, Application, application/octet-stream, image/jpeg, application/zip');
         $response->header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, OPTIONS, DELETE');
         $response->header('Access-Control-Request-Method', '*');
-        $response->header('Access-Control-Allow-Credentials', 'false');
+        $response->header('Access-Control-Allow-Credentials', 'true');
         return $response;
     }
 }

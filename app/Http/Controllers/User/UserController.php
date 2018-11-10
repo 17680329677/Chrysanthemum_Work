@@ -81,7 +81,7 @@ class UserController extends Controller{
         $input = $request->all();
         $email = $input['email'];
         $userInfo = DB::table('users')
-            ->select('users.id','users.name','users.email','users.phone','users.sex','users.age',
+            ->select('users.id','users.username','users.name','users.email','users.phone','users.sex','users.age',
                 'permission_role.permission_id','permissions.name as permissionname','roles.display_name as rolesname')
             ->join('role_user', 'role_user.user_id', '=', 'users.id')
             ->join('roles', 'role_user.role_id', '=', 'roles.id')
@@ -104,7 +104,13 @@ class UserController extends Controller{
             ];
         }
     }
+    
 
+    /**
+     * @param Request $request
+     * @return array
+     * 用户修改信息的控制器方法
+     */
     public function updateUserInfo(Request $request){
         $id = $request->get('id');
         $user = User::where('id', $id)->first();
@@ -122,6 +128,7 @@ class UserController extends Controller{
                 }
             }
             $user->age = $request->get('age');
+            $user->username = $request->get('username');
             $user->name = $request->get('name');
             $user->phone = $request->get('phone');
             $user->sex = $request->get('sex');
@@ -131,6 +138,36 @@ class UserController extends Controller{
             'status' => 'success',
             'reason' => 'update success!'
         ];
+    }
+
+
+    /**
+     * @param Request $request
+     * @return array
+     * 用户修改密码的控制器方法
+     */
+    public function resetpwd(Request $request){
+        $input = $request->all();
+        $email = $input['email'];
+        $old_pwd = $input['old_pwd'];
+        $new_pwd = $input['new_pwd'];
+
+        $user = DB::table('users')->where('email', '=', $email)
+            ->get()->toArray();
+        if (Hash::check($old_pwd, $user[0]->password)){
+            $password = Hash::make($new_pwd);
+            DB::table('users')->where('email', '=', $email)
+                ->update(['password' => $password]);
+            return $data = [
+                'status'=>'success',
+                'reason'=>'reset password success!'
+            ];
+        }else{
+            return $data = [
+                'status'=>'failed',
+                'reason'=>'old password is not correct!'
+            ];
+        }
     }
 
 }
