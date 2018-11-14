@@ -47,7 +47,11 @@ Route::post('/picprocess', 'ArtificialData\ArtificialController@picProcess');   
 
 Route::post('/sendemail', 'Email\EmailController@sendEmail');
 
-//Route::get('/download', function (){
-//    return response()->download('G:/Chrysanthemum_Work/public/test.txt', '18510363933.txt');
-//});
 Route::get('/download', 'Email\DownLoadController@download');
+
+// 仪器拍摄数据路由
+Route::group(['prefix' => 'Instrument'], function () {
+    Route::post('/getAllOriginPicInfo', 'InstrumentData\OriginPicController@getAllOriginPicInfo');
+    Route::post('/getOriginInfoByIndex', 'InstrumentData\OriginPicController@getOriginInfoByIndex');
+    Route::post('/getOriginPic', 'InstrumentData\OriginPicController@getOriginPic');
+});
