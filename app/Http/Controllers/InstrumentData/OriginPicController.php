@@ -30,11 +30,29 @@ class OriginPicController extends Controller{
     public function getAllOriginPicInfo(){
         try{
 //            throw new Exception('something is wrong!');
+            // 查询原始图片的信息
             $result = DB::table('instrument_origin_pictures')
                 ->select('id','instrument_origin_pictures.cultivar_id','id_name.cultivar_name','plant_id','pic_date','angle','revolution_num')
                 ->join('id_name', 'instrument_origin_pictures.cultivar_id', '=', 'id_name.cultivar_id')
                 ->get()->toArray();
+
             if ($result){
+                // 若查询结果不为空，则根据原始图片信息判断该图片是否有对应的LBP图片和数值数据
+                for ($i = 0; $i < count($result); $i++){
+                    $res_pic = DB::table('instrument_process_pictures')
+                        ->where('cultivar_id', '=', $result[$i]->cultivar_id)
+                        ->where('plant_id', '=', $result[$i]->plant_id)->where('pic_date', '=', $result[$i]->pic_date)
+                        ->where('angle', '=', $result[$i]->angle)
+                        ->where('revolution_num', '=', $result[$i]->revolution_num)->get();
+                    $result[$i]->pro_flag = (!$res_pic==null);
+
+                    $res_data = DB::table('instrument_process_ chrysanthemum_ character')
+                        ->where('cultivar_id', '=', $result[$i]->cultivar_id)
+                        ->where('plant_id', '=', $result[$i]->plant_id)->where('date', '=', $result[$i]->pic_date)
+                        ->where('angle', '=', $result[$i]->angle)
+                        ->where('revolution_num', '=', $result[$i]->revolution_num)->get();
+                    $result[$i]->data_flag = (!$res_data==null);
+                }
                 return $data = [
                     'status' => 'success',
                     'data' => $result
@@ -86,6 +104,22 @@ class OriginPicController extends Controller{
                     }
                 )->get()->toArray();
             if ($result){
+                // 若查询结果不为空，则根据原始图片信息判断该图片是否有对应的LBP图片和数值数据
+                for ($i = 0; $i < count($result); $i++){
+                    $res_pic = DB::table('instrument_process_pictures')
+                        ->where('cultivar_id', '=', $result[$i]->cultivar_id)
+                        ->where('plant_id', '=', $result[$i]->plant_id)->where('pic_date', '=', $result[$i]->pic_date)
+                        ->where('angle', '=', $result[$i]->angle)
+                        ->where('revolution_num', '=', $result[$i]->revolution_num)->get();
+                    $result[$i]->pro_flag = (!$res_pic==null);
+
+                    $res_data = DB::table('instrument_process_ chrysanthemum_ character')
+                        ->where('cultivar_id', '=', $result[$i]->cultivar_id)
+                        ->where('plant_id', '=', $result[$i]->plant_id)->where('date', '=', $result[$i]->pic_date)
+                        ->where('angle', '=', $result[$i]->angle)
+                        ->where('revolution_num', '=', $result[$i]->revolution_num)->get();
+                    $result[$i]->data_flag = (!$res_data==null);
+                }
                 return $data = [
                     'status' => 'success',
                     'data' => $result
@@ -104,6 +138,11 @@ class OriginPicController extends Controller{
         }
     }
 
+    /**
+     * @param Request $request
+     * @return array
+     * 获取仪器拍摄的原始图片的缩略图
+     */
     public function getOriginPic(Request $request){
         $input = $request->all();
         $email = $input['email'];
@@ -114,14 +153,16 @@ class OriginPicController extends Controller{
         foreach ($id as $key => $value){
             $b64 = DB::table('instrument_origin_pictures')->select('base64')
                 ->where('id', '=', $value)->get()->toArray();
+            // 若查询结果不为空，则将结果的base64存入数组，键名为id
             if ($b64[0]->base64) {
                 $base64_data[$value] = $b64[0]->base64;
-                unset($id[$key]);
-                $ids = array_values($id);
+                unset($id[$key]);   // unset将指定的值的数从数组中删除
+                $ids = array_values($id);   // 对数组重新建立索引
             }
         }
-        // 如果有没有被处理的图片，即数据库中base64为空，则请求
+        // 如果有没有被处理的图片，即数据库中base64为空，则请求python对指定图片进行处理
         if ($ids) {
+            // 构造发往python的消息中要传输的数据
             $post_data = array(
                 "email" => $email,
                 "id" => $ids
@@ -130,7 +171,7 @@ class OriginPicController extends Controller{
             Helper::sendMessage(json_encode($post_data), $this->host . ":4151/pub?topic=instrumentOriginPicProcess");
             $temp = Helper::read_redis('instrument_origin_' . $emails[0], 200, 1);
             $res = json_decode($temp);
-            if (isset($res)) {
+            if (isset($res)) {  // 如果python处理成功，则将处理完毕的base64按照规则存入数组并返回
                 if ($res->status == 'success') {
                     foreach ($ids as $value){
                         $b64 = DB::table('instrument_origin_pictures')->select('base64')

@@ -44,43 +44,16 @@ class ArtificialController extends Controller {
         Helper::sendMessage(json_encode($postdata), $url);
         $temp = Helper::read_redis($redis_key, 200, 1);
         $res = json_decode($temp);
-
-        $path = "";
-        $cultivar_id = '';
-        $pic = [];
-        if (isset($res)){
-            if ($res->status == 'success'){
-                $path = $res->path;
-                $cultivar_id = $res->id;
-                $email = $res->email;
-                for($i = 0; $i < count($cultivar_id); $i++) {
-                    $pic['cultivar' . $cultivar_id[$i]] = [];
-                    $base64_pic = DB::table('pic_' . $email . '_artificial')
-                        ->select('base64')->where('cultivar_id', '=', $cultivar_id[$i])
-                        ->get()->toArray();
-                    array_push($pic['cultivar' . $cultivar_id[$i]], $base64_pic);
-                }
-            }
+        if (isset($res) and $res->status == 'success'){
+            return $process_res = [
+                'status' => 'success'
+            ];
+        }else{
+            return $process_res = [
+                'status' => 'failed',
+                'reason' => $res->reason
+            ];
         }
-
-//        for($i = 0; $i < count($cultivar_id); $i++){
-//            $files = scandir($path . '\\' . $cultivar_id[$i]);
-//            $pic['cultivar' . $cultivar_id[$i]] = [];
-//            foreach ($files as $file){
-//                if ($file != '.' && $file != '..'){
-//                    // $file = iconv("GBK", "UTF-8//IGNORE", $file);
-//                    array_push($pic['cultivar' . $cultivar_id[$i]], $file);
-//                }
-//            }
-//        }
-
-
-        $process_res = [
-            'path' => $path,
-            'pic' => $pic
-        ];
-
-        return $process_res;
     }
 
 
@@ -142,11 +115,7 @@ class ArtificialController extends Controller {
 
 
         $results = DB::table('artificial_character')
-//            ->whereIn('ray_florets_flaps', $input['ray_florets_flaps'])
-//            ->whereIn('flower_type', $input['flower_type'])
-//            ->whereIn('classification_of_cultivar', $input['classification_of_cultivar'])
-//            ->whereIn('color_system', $input['color_system'])
-//            ->whereIn('age_of_cultivar', $input['age_of_cultivar'])
+            // 使用匿名函数动态添加指标，空指标不做检索
             ->where(
                 function ($query) use ($indexList){
                     foreach ($indexList as $key => $value){
@@ -156,7 +125,6 @@ class ArtificialController extends Controller {
                     }
                 }
             )
-            // 使用匿名函数动态添加指标，空指标不做检索
             ->where(
                 function ($query) use ($numList){
                     foreach ($numList as $key => $value){
@@ -196,22 +164,59 @@ class ArtificialController extends Controller {
         $input = $request->all();
         $cultivar_id = $input['cultivar_id'];
         $email = $input['email'];
+        // 判断用户所选的品种是否已经经过处理
+        $flag = false;
+        $base64_data = array();
+        $ids = array();
+        // 将未经过python处理的品种的id保存起来，以便向python发送消息
+        foreach ($cultivar_id as $key => $value){
+            $result = DB::table('artificial_shot_pictures')->select('base64')
+                ->where('cultivar_id', '=', $value)->get()->toArray();
+            for ($i = 0; $i < count($result); $i++){
+                if ($result[$i]->base64 == null){
+                    array_push($ids, $value);
+                    break;
+                }
+            }
+        }
 
-        $post_data = array(
-            "email" => $email,
-            "id" => $cultivar_id
-        );
-        $process_res = self::artificial_python($post_data, $this->host . ":4151/pub?topic=artificialPicProcess", $email);
-        $path = $process_res['path'];
-        $pic = $process_res['pic'];
-//        $base64 = $process_res['base64'];
+        // 如果未经处理的id集不为空，则向python发送处理图片的请求
+        if ($ids) {
+            $post_data = array(
+                "email" => $email,
+                "id" => $ids
+            );
+            $process_res = self::artificial_python($post_data, $this->host . ":4151/pub?topic=artificialPicProcess", $email);
+            if ($process_res['status'] == 'success'){
+                $flag = true;   // 若python处理成功，则将标志flag设为真值
+            }else {
+                return $data = [
+                    'status' => 'failed',
+                    'reason' => $process_res['reason']
+                ];
+            }
+        }else {     // 若图片都已经经过处理，也将flag设为真值
+            $flag = true;
+        }
 
+        // 若flag为true（python处理成功或不需要python处理） 且用户请求的品种不为空
+        if ($flag and $cultivar_id){
+            foreach ($cultivar_id as $key => $value){
+                $res = DB::table('artificial_shot_pictures')->select('base64')
+                    ->where('cultivar_id', '=', $value)->get()->toArray();
+                $base64_data[$value] = $res;
+            }
+            return $data = [
+                'status' => 'success',
+                'pic' => $base64_data
+            ];
+        }else {
+            return $data = [
+                'status' => 'failed',
+                'reason' => '获取图片失败'
+            ];
+        }
 
-        return $data = [
-            'status'=>'success',
-            'cultivar_id'=>$cultivar_id,
-            'path'=>$path,
-            'pic'=>$pic
-        ];
     }
+
 }

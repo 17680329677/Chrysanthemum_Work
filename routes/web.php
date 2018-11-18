@@ -51,7 +51,10 @@ Route::get('/download', 'Email\DownLoadController@download');
 
 // 仪器拍摄数据路由
 Route::group(['prefix' => 'Instrument'], function () {
-    Route::post('/getAllOriginPicInfo', 'InstrumentData\OriginPicController@getAllOriginPicInfo');
-    Route::post('/getOriginInfoByIndex', 'InstrumentData\OriginPicController@getOriginInfoByIndex');
-    Route::post('/getOriginPic', 'InstrumentData\OriginPicController@getOriginPic');
+    Route::post('/getAllOriginPicInfo', 'InstrumentData\OriginPicController@getAllOriginPicInfo');  // 获取所有原始图片的信息
+    Route::post('/getOriginInfoByIndex', 'InstrumentData\OriginPicController@getOriginInfoByIndex');    // 根据指标检索原始图片信息
+    Route::post('/getOriginPic', 'InstrumentData\OriginPicController@getOriginPic');    // 获取原始图片
+    Route::post('/getProcessPic', 'InstrumentData\ProcessPicController@getProcessPic');     // 获取处理过的LBP图片
+    Route::post('/getProcessData', 'InstrumentData\ProcessDataController@getProcessData');   // 获取数据
+    Route::post('/packAndDownload', 'InstrumentData\RequestDownloadController@packAndDownLoad');    // 打包并下载的
 });
